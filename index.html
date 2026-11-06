@@ -1,0 +1,1127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Master: Kosovo × Sérvia</title>
+<!-- Fontes: se estiver online, o Google Fonts carrega Black Ops One e Barlow Condensed.
+     Offline (ou se preferir), coloque os .ttf na pasta fonts/ ou instale-os no sistema; sem eles, entram fontes de sistema. -->
+<script>
+/* Fontes: carregadas do Google Fonts só quando há internet; offline entram as fontes de sistema (ou as instaladas). */
+try { if (navigator.onLine) { var lk = document.createElement('link'); lk.rel = 'stylesheet';
+  lk.href = 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Black+Ops+One&display=swap'; document.head.appendChild(lk); } } catch (e) {}
+</script>
+<style>
+
+:root{
+  --papel:#EFE9D8; --tinta:#22251C; --oliva:#3E4A2E; --oliva-claro:#5d6b46;
+  --facil:#2F6B2C; --medio:#D49A1C; --desafio:#A3241B;
+  --fundo:#171913; --linha:#c9c2a8;
+  --titulo:'Black Ops One','Impact','Arial Black',sans-serif;
+  --texto:'Barlow Condensed','Arial Narrow','Roboto Condensed','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--fundo);color:var(--papel);font-family:var(--texto);font-size:18px;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font-family:inherit;color:inherit}
+:focus-visible{outline:3px solid #ffd45a;outline-offset:2px}
+[hidden]{display:none!important}
+.ico{display:inline-block;vertical-align:middle;flex:none}
+
+/* ---------- layout ---------- */
+#app{display:flex;height:100vh;gap:10px;padding:8px}
+#boardWrap{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center}
+#board{position:relative;width:min(100%, calc((100vh - 16px) * 1087 / 674));aspect-ratio:1087/674;container-type:inline-size;background:#fbf2c8;border-radius:6px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.55)}
+#boardImg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+#board .abs{position:absolute;transform:translate(-50%,-50%)}
+
+/* casas */
+.casa{width:8.83%;height:8.3%;border-radius:999px;pointer-events:none}
+.casa .num{position:absolute;left:11%;top:5%;font:700 1.45cqw/1 var(--texto);color:#2f4f93;letter-spacing:.02em;text-shadow:0 0 2px #dbe7ff}
+.casa.ev{box-shadow:inset 0 0 0 .32cqw #e3a21a,0 0 0 .1cqw #fff7}
+.casa.ev .evi{position:absolute;right:9%;top:14%;color:#b9780a;width:1.7cqw;height:1.7cqw}
+.casa.ev .num{color:#8a5600}
+.casa.alvo{animation:alvo 1s ease-in-out infinite}
+@keyframes alvo{50%{box-shadow:inset 0 0 0 .32cqw #e3a21a,0 0 1.6cqw .3cqw #ffd45a}}
+
+/* peões */
+.peao{width:3.0%;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;border:.22cqw solid #fff;box-shadow:0 .25cqw .6cqw rgba(0,0,0,.55);z-index:5;transition:left .28s ease,top .28s ease}
+.peao svg{width:62%;height:62%}
+.peao.atual{box-shadow:0 0 0 .3cqw #ffd45a,0 .25cqw .8cqw rgba(0,0,0,.6);z-index:6}
+.peao.hop{animation:hop .3s ease}
+@keyframes hop{40%{margin-top:-1.2cqw}}
+body.rapido .peao{transition:none}
+body.rapido .peao.hop{animation:none}
+
+/* anéis (pilhas) */
+.anel{width:10.4%;aspect-ratio:1;border-radius:50%;border:0;background:transparent;cursor:default;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.25cqw;color:var(--tinta);z-index:3;font-family:var(--texto)}
+.anel .t{font:700 1.08cqw/1 var(--texto);text-transform:uppercase;letter-spacing:.01em;text-align:center;color:var(--tinta)}
+.anel .ico{width:2.5cqw;height:2.5cqw}
+.anel .mini{font:600 .85cqw/1 var(--texto);opacity:.7}
+.anel.ativo{cursor:pointer}
+.anel.ativo::after{content:"";position:absolute;inset:-.5cqw;border-radius:50%;border:.3cqw solid var(--rc);opacity:.9;animation:pulsa 1.2s ease-out infinite;pointer-events:none}
+@keyframes pulsa{0%{transform:scale(.96);opacity:.95}100%{transform:scale(1.18);opacity:0}}
+.anel.ativo:hover{transform:translate(-50%,-50%) scale(1.07)}
+.anel.bloq{cursor:not-allowed}
+.anel.bloq::before{content:"";position:absolute;inset:0;border-radius:50%;background:rgba(95,95,95,.62)}
+.anel.bloq>*{opacity:.55}
+.anel .bq{position:absolute;z-index:2;color:#fff;font:700 1cqw/1.05 var(--texto);text-align:center;text-transform:uppercase;display:none}
+.anel.bloq .bq{display:block}
+.anel.bloq .bq~*{}
+
+/* retângulo central */
+#centro{left:53.97%;top:60.1%;width:19.3%;height:20.2%;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--tinta);z-index:2;padding:.5cqw;overflow:hidden}
+#centro .c1{font:700 1.5cqw/1.15 var(--texto);text-transform:uppercase;color:var(--oliva)}
+#centro .c2{font:500 1.3cqw/1.2 var(--texto);margin-top:.3cqw}
+#centro .mc{display:flex;flex-direction:column;align-items:center;gap:.3cqw;width:100%;height:100%;border-left:1.2cqw solid var(--cn);padding-left:.8cqw;justify-content:center}
+#centro .mc b{font:400 1.7cqw/1 var(--titulo)}
+#centro .mc span{font:600 1.15cqw/1.1 var(--texto);text-transform:uppercase}
+#centro .mc .r{font:700 1.2cqw/1.15 var(--texto)}
+#centro .mc .r.ok{color:var(--facil)} #centro .mc .r.no{color:var(--desafio)}
+
+/* calibração */
+#calib{position:absolute;inset:0;pointer-events:none;display:none;z-index:20}
+body.calib #calib{display:block}
+body.calib .casa{outline:2px dashed #e0189a;background:rgba(224,24,154,.12)}
+body.calib .casa .num{font-size:2.1cqw;color:#a0006c;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9}
+body.calib .anel{outline:2px dashed #009;background:rgba(0,0,200,.1)}
+body.calib #centro{outline:2px dashed #060;background:rgba(0,150,0,.12)}
+.cb{position:absolute;transform:translate(-50%,-50%);border:2px dashed #e0189a;background:rgba(224,24,154,.12);color:#a0006c;font:700 2cqw/1 var(--texto);display:flex;align-items:center;justify-content:center;border-radius:999px}
+.cbp{position:absolute;width:.9cqw;height:.9cqw;transform:translate(-50%,-50%);background:#e0189a;border-radius:50%}
+#calibInfo{position:fixed;left:12px;bottom:12px;background:#000c;color:#fff;font:600 16px var(--texto);padding:6px 10px;border-radius:6px;z-index:90;display:none}
+body.calib #calibInfo{display:block}
+
+/* ---------- painel lateral ---------- */
+#side{flex:0 0 clamp(236px,20vw,330px);display:flex;flex-direction:column;gap:8px;overflow:auto;padding-right:2px}
+.pn{background:var(--papel);color:var(--tinta);border:2px solid var(--oliva);border-radius:8px;padding:8px 10px}
+.pn h3{margin:0 0 6px;font:400 .95rem var(--titulo);color:var(--oliva);letter-spacing:.06em;text-transform:uppercase}
+.topo{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.topo .tit{flex:1 1 100%;font:400 1.05rem/1.1 var(--titulo);letter-spacing:.05em;color:var(--papel);margin:0 0 2px}
+.ib{width:44px;height:44px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--oliva);background:var(--oliva);color:var(--papel);border-radius:8px;cursor:pointer}
+.ib:hover{background:var(--oliva-claro)}
+.relogio{display:flex;align-items:center;gap:8px;font:700 1.5rem var(--texto);color:var(--oliva)}
+.relogio small{font:600 .9rem var(--texto);text-transform:uppercase;opacity:.8}
+.relogio.fim{color:var(--desafio)}
+.vez{display:flex;flex-direction:column;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.dot{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 0 0 1px #0004;flex:none}
+.dot svg{width:62%;height:62%}
+.dica{font:600 1rem/1.15 var(--texto);color:var(--oliva)}
+.flag{display:inline-flex;align-items:center;gap:4px;font:700 .85rem var(--texto);background:var(--oliva);color:var(--papel);padding:2px 7px;border-radius:4px;text-transform:uppercase;margin:2px 3px 0 0}
+.flag.red{background:var(--desafio)}
+.jlist{display:flex;flex-direction:column;gap:4px}
+.jl{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:4px 6px;border-radius:6px;border:2px solid transparent}
+.jl.atual{border-color:var(--oliva);background:#e3dcc3}
+.jl .nm{font-weight:700;line-height:1.05}
+.jl .st{font:500 .85rem var(--texto);opacity:.8}
+.jl .cs{font:400 1.25rem var(--titulo);color:var(--oliva);text-align:right}
+.jl .cs small{display:block;font:600 .7rem var(--texto);opacity:.75;letter-spacing:.04em}
+.evl{font:500 .9rem/1.25 var(--texto);margin:0;padding:0;list-style:none}
+.evl li{display:flex;gap:6px}.evl b{color:#8a5600;min-width:3.3em}
+.logl{font:500 .9rem/1.25 var(--texto);max-height:5.5em;overflow:hidden}
+
+/* ---------- botões / modais ---------- */
+.btn{min-height:44px;min-width:44px;padding:8px 20px;font:700 1.15rem var(--texto);letter-spacing:.05em;text-transform:uppercase;border:2px solid var(--oliva);background:var(--oliva);color:var(--papel);border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{filter:brightness(1.12)}
+.btn.sec{background:transparent;color:var(--oliva)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+#modal,#inicio,#banner,#pausa{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:10px}
+#modal{background:rgba(10,12,6,.55);z-index:50}
+#banner{background:rgba(10,12,6,.5);z-index:70}
+#pausa{background:rgba(10,12,6,.94);z-index:80;flex-direction:column;gap:18px;text-align:center}
+#pausa h1{font:400 clamp(36px,6vw,80px) var(--titulo);margin:0;letter-spacing:.08em;color:var(--papel)}
+#inicio{z-index:60;background:radial-gradient(ellipse at center,#2a3020,#10120c);overflow:auto}
+
+.dossie{position:relative;background:var(--papel);color:var(--tinta);border:3px solid var(--oliva);border-radius:12px;box-shadow:0 14px 50px rgba(0,0,0,.6);overflow:hidden;
+  background-image:radial-gradient(circle at 88% 92%,transparent 0 18px,rgba(62,74,46,.07) 19px 21px,transparent 22px 40px,rgba(62,74,46,.07) 41px 43px,transparent 44px 62px,rgba(62,74,46,.07) 63px 65px,transparent 66px)}
+.carimbo{display:inline-block;border:3px solid var(--tinta);border-radius:5px;padding:2px 12px;font:400 1.3rem/1.15 var(--titulo);letter-spacing:.06em;transform:rotate(-2deg);color:var(--tinta);background:#f6f1e2;text-transform:uppercase}
+.conceito{display:inline-flex;align-items:center;gap:6px;background:var(--tinta);color:var(--papel);padding:4px 12px;border-radius:4px;font:700 1rem var(--texto);letter-spacing:.07em;text-transform:uppercase}
+.arame{display:block;width:100%;height:16px;margin:8px 0 10px}
+
+/* carta */
+.carta{width:min(920px,96vw);max-height:97vh;display:flex;flex-direction:column;--nc:var(--facil);--nt:#fff}
+.carta .faixa{position:absolute;left:0;top:0;bottom:0;width:clamp(38px,4.4vw,62px);background:var(--nc);color:var(--nt);display:flex;align-items:center;justify-content:center}
+.carta .faixa span{writing-mode:vertical-rl;transform:rotate(180deg);font:400 clamp(18px,2.4vw,30px) var(--titulo);letter-spacing:.35em}
+.carta .corpo{padding:14px 18px 14px calc(clamp(38px,4.4vw,62px) + 20px);display:flex;flex-direction:column;min-height:0;overflow:auto}
+.carta .topc{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.carta .topc .sp{flex:1}
+.leitor{font:600 1rem var(--texto);color:var(--oliva);margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pergunta{font:700 clamp(21px,3.7vh,36px)/1.14 var(--texto);margin:8px 0 0}
+.alts{display:grid;grid-template-columns:1fr;gap:clamp(5px,1vh,10px)}
+.alt{display:flex;align-items:center;gap:12px;text-align:left;min-height:max(44px,6.6vh);padding:6px 12px;background:#f7f2e4;border:2px solid #b8b093;border-radius:8px;font:600 clamp(18px,3.1vh,28px)/1.1 var(--texto);color:var(--tinta);cursor:pointer}
+.alt:hover:not(:disabled){border-color:var(--oliva);background:#fff}
+.alt .l{flex:none;width:2.1em;height:2.1em;border-radius:50%;background:var(--oliva);color:var(--papel);display:flex;align-items:center;justify-content:center;font:700 .8em var(--texto)}
+.alt:disabled{cursor:default}
+.alt.certa{border-color:var(--facil);background:#dcebd2;box-shadow:inset 0 0 0 2px var(--facil)}
+.alt.certa .l{background:var(--facil)}
+.alt.errada{border-color:var(--desafio);background:#f1d6d1;box-shadow:inset 0 0 0 2px var(--desafio)}
+.alt.errada .l{background:var(--desafio)}
+.alt.apagada{opacity:.5}
+.alt .res{margin-left:auto;display:flex;align-items:center;font:700 .7em var(--texto);gap:4px;text-transform:uppercase}
+.resultado{margin-top:10px;border-top:3px double var(--oliva);padding-top:8px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.resultado .tx{flex:1 1 320px}
+.resultado h4{margin:0;font:400 clamp(20px,3.4vh,30px) var(--titulo);letter-spacing:.05em}
+.resultado h4.ok{color:var(--facil)}.resultado h4.no{color:var(--desafio)}
+.resultado .ef{font:700 1.15rem var(--texto);margin:2px 0}
+.resultado .ex{font:500 1.1rem/1.25 var(--texto)}
+
+/* timer */
+.timer{position:relative;width:64px;height:64px;flex:none}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:7}
+.timer .bg{stroke:#cfc8ae}.timer .fg{stroke:var(--oliva);stroke-linecap:round;transition:stroke .3s}
+.timer.baixo .fg{stroke:var(--desafio)}
+.timer .n{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:400 1.5rem var(--titulo)}
+.timer.baixo .n{color:var(--desafio)}
+
+/* nível */
+.nivelBox{width:min(640px,96vw);padding:16px 20px}
+.nivelBox h2{margin:8px 0 2px;font:400 1.8rem var(--titulo);letter-spacing:.05em}
+.nivelBox .sub{font:600 1.15rem var(--texto);color:var(--oliva);margin-bottom:10px}
+.nvs{display:grid;gap:10px}
+.nv{display:grid;grid-template-columns:62px 1fr;align-items:center;gap:14px;min-height:72px;text-align:left;padding:8px 14px 8px 0;background:#f7f2e4;border:2px solid var(--nc);border-radius:8px;cursor:pointer;color:var(--tinta);overflow:hidden}
+.nv .k{align-self:stretch;background:var(--nc);color:var(--nt);display:flex;align-items:center;justify-content:center;font:400 2rem var(--titulo)}
+.nv b{display:block;font:400 1.4rem var(--titulo);letter-spacing:.06em;text-transform:uppercase}
+.nv span{font:600 1.1rem/1.2 var(--texto)}
+.nv:hover:not(:disabled){background:#fff;box-shadow:0 0 0 3px var(--nc)}
+.nv:disabled{opacity:.5;cursor:not-allowed}
+
+/* evento */
+.evento{width:min(560px,96vw);padding:18px 24px;text-align:center}
+.evento h2{margin:10px 0 4px;font:400 1.9rem var(--titulo);letter-spacing:.05em}
+.evento p{margin:6px 0;font:500 1.3rem/1.25 var(--texto)}
+.evento .ef{font-weight:700;color:var(--oliva)}
+
+/* início e fim */
+.tela{width:min(980px,96vw);padding:22px 28px}
+.tela h1{margin:0;font:400 clamp(30px,5vw,58px)/1.02 var(--titulo);letter-spacing:.05em;color:var(--tinta)}
+.tela h1 small{display:block;font-size:.4em;letter-spacing:.2em;color:var(--oliva);margin-bottom:6px}
+.tela .lead{font:500 1.2rem/1.3 var(--texto);margin:8px 0 14px;max-width:46em}
+.modos{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 16px}
+.modo{display:block;text-align:left;border:3px solid var(--linha);background:#f7f2e4;border-radius:10px;padding:12px 16px;cursor:pointer;min-height:44px;color:var(--tinta)}
+.modo b{display:block;font:400 1.4rem var(--titulo);letter-spacing:.05em}
+.modo span{font:500 1.1rem/1.2 var(--texto)}
+.modo[aria-pressed=true]{border-color:var(--oliva);box-shadow:inset 0 0 0 3px var(--oliva);background:#fff}
+.acoes{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.deleg{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 14px}
+.deleg .chip{font-size:1.1rem}
+.deleg .dot{width:32px;height:32px}
+.rank{width:100%;border-collapse:collapse;margin:10px 0;font:600 1.05rem var(--texto)}
+.rank th{background:var(--oliva);color:var(--papel);padding:6px 8px;text-align:center;font:700 .9rem var(--texto);letter-spacing:.05em;text-transform:uppercase}
+.rank td{padding:6px 8px;text-align:center;border-bottom:1px solid var(--linha)}
+.rank td:nth-child(2){text-align:left}
+.rank tr.venc td{background:#e6e8c6;font-weight:700}
+.rank .pos{font:400 1.4rem var(--titulo);color:var(--oliva)}
+.nota{font:500 1rem/1.3 var(--texto);color:var(--oliva)}
+.regras{max-height:70vh;overflow:auto;font:500 1.1rem/1.3 var(--texto)}
+.regras h3{font:400 1.1rem var(--titulo);color:var(--oliva);margin:12px 0 4px;letter-spacing:.05em}
+.regras ul{margin:4px 0 4px 1.1em;padding:0}
+
+@media (max-width:1100px){ #side{flex-basis:230px} body{font-size:16px} }
+@media (prefers-reduced-motion:reduce){ .anel.ativo::after,.casa.alvo{animation:none} .peao.hop{animation:none} }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="arame" width="38" height="16" patternUnits="userSpaceOnUse">
+    <path d="M0 8 Q9.5 3.5 19 8 T38 8" fill="none" stroke="#6a6e5a" stroke-width="1.7"/>
+    <path d="M14 3 L24 13 M24 3 L14 13" stroke="#3E4A2E" stroke-width="1.8" stroke-linecap="round"/>
+  </pattern>
+</defs></svg>
+
+<main id="app">
+  <section id="boardWrap">
+    <div id="board">
+      <img id="boardImg" src="tabuleiro.jpg" alt="Tabuleiro Kosovo × Sérvia" draggable="false">
+      <div id="camadaCasas"></div>
+      <div id="camadaAneis"></div>
+      <div id="centro" class="abs"></div>
+      <div id="camadaPeoes"></div>
+      <div id="calib"></div>
+    </div>
+  </section>
+  <aside id="side" aria-label="Painel da partida"></aside>
+</main>
+<div id="calibInfo"></div>
+<div id="modal" hidden></div>
+<div id="banner" hidden></div>
+<div id="pausa" hidden>
+  <h1>Jogo pausado</h1>
+  <button class="btn" id="btnRetomar" style="font-size:1.5rem;padding:12px 34px">Continuar (P)</button>
+</div>
+<div id="inicio" hidden></div>
+<noscript>Este jogo precisa de JavaScript.</noscript>
+
+<script>
+'use strict';
+/* =====================================================================
+   CONFIG — tudo o que é ajustável fica aqui
+   ===================================================================== */
+const CONFIG = {
+  chaveSave: 'masterKosovoServia_v1',
+  tempoResposta: 30,                 // segundos para responder
+  casaFinal: 30,                     // casa de Adesão
+  maxAvancoPorTurno: 3,              // teto de casas avançadas por turno (resposta + eventos)
+  voltaAoErrarNivel3: 1,
+  duracaoModoTempoMin: 25,           // modo "por tempo"
+  leitorDeslocamento: 1,             // leitor = jogador à esquerda = próximo na ordem horária (+1)
+  animacaoMsPorCasa: 320,
+  eventosAoRecuar: false,            // se true, recuar para uma casa de evento também dispara o evento
+  eventosEncadeados: false,          // se true, movimento causado por evento pode disparar outro evento
+
+  // mapeamento anel -> eixo (editável)
+  aneis: { vermelho: 'rec', azul: 'ue', cinza: 'otan', laranja: 'min' },
+
+  eixos: {
+    rec:  { nome: 'Reconhecimento', icone: 'flag'   },
+    ue:   { nome: 'União Europeia', icone: 'eu'     },
+    otan: { nome: 'OTAN',           icone: 'shield' },
+    min:  { nome: 'Minorias',       icone: 'users'  }
+  },
+
+  niveis: {
+    1: { nome: 'Fácil',   avanco: 1, cor: '#2F6B2C', texto: '#ffffff' },
+    2: { nome: 'Médio',   avanco: 2, cor: '#D49A1C', texto: '#22251C' },
+    3: { nome: 'Desafio', avanco: 3, cor: '#A3241B', texto: '#ffffff' }
+  },
+
+  // casas de evento (valores provisórios)
+  eventos: {
+    4:  { tipo: 'avancar',      valor: 1, nome: 'Reconhecimento ganho', texto: 'Um novo reconhecimento fortalece a delegação: avance 1 casa.' },
+    9:  { tipo: 'recuar',       valor: 1, nome: 'Sanções',              texto: 'Sanções pesam sobre a delegação: volte 1 casa.' },
+    13: { tipo: 'alianca',                nome: 'Aliança',              texto: 'No próximo turno, errar no nível 3 não faz a delegação voltar.' },
+    18: { tipo: 'todosRecuam',  valor: 1, nome: 'Crise de energia',     texto: 'A crise atinge a região: todos os peões voltam 1 casa.' },
+    22: { tipo: 'perguntaExtra', nivel: 1, valor: 1, nome: 'Opinião pública', texto: 'Pergunta extra de nível 1: acertando, avance 1 casa.' },
+    27: { tipo: 'dissuasao',              nome: 'Dissuasão',            texto: 'O próximo jogador não poderá escolher o nível 3.' }
+  },
+
+  // delegações, na ordem em que sentam (sentido horário)
+  jogadores: [
+    { id: 'kosovo', nome: 'Kosovo',         cor: '#C9A227', tinta: '#2b2200', icone: 'star'    },
+    { id: 'servia', nome: 'Sérvia',         cor: '#C0392B', tinta: '#ffffff', icone: 'cross'   },
+    { id: 'ue',     nome: 'União Europeia', cor: '#2B5DB8', tinta: '#ffffff', icone: 'eu'      },
+    { id: 'otan',   nome: 'OTAN',           cor: '#4A4F57', tinta: '#ffffff', icone: 'compass' }
+  ],
+
+  // geometria do tabuleiro (pixels da imagem tabuleiro.jpg; convertidos em % ao desenhar)
+  tabuleiro: {
+    imagem: 'tabuleiro.jpg', largura: 1087, altura: 674,
+    casaL: 93, casaA: 55, peao: 32,
+    // centro de cada casa (medido na imagem). Índice 0 = área de Início (fora da trilha); 1..30 = pílulas azuis
+    casas: [
+      [318, 566],
+      [275, 606], [168, 606], [61, 605], [61, 536], [61, 467], [61, 397], [61, 327], [61, 258], [61, 189],
+      [168, 189], [275, 189], [275, 119], [275, 49], [382, 49], [489, 50], [596, 49], [703, 49], [810, 50],
+      [810, 119], [810, 189], [917, 189], [1024, 189], [1024, 258], [1024, 328], [1024, 397], [1024, 467],
+      [1024, 536], [1025, 606], [917, 605], [810, 606]
+    ],
+    inicio: { l: 118, a: 84 },        // área da casa 0 (2×2 peões)
+    aneis: {                           // centro e raio de cada anel (medidos)
+      laranja:  { x: 456.5, y: 188,   r: 56 },
+      cinza:    { x: 631.5, y: 188,   r: 56 },
+      azul:     { x: 283.5, y: 347,   r: 56 },
+      vermelho: { x: 799.5, y: 355.5, r: 56 }
+    },
+    corAnel: { laranja: '#F4A93F', cinza: '#BDBDBD', azul: '#15337A', vermelho: '#C0281A' },
+    retangulo: { x: 440, y: 339, l: 206, a: 133 }   // parte branca interna
+  }
+};
+
+/* =====================================================================
+   CARTAS (45) — texto extraído do PDF; gabarito/eixo conforme combinado
+   ===================================================================== */
+const GAB = {1:['A','rec'],2:['C','otan'],3:['B','min'],4:['D','rec'],5:['C','rec'],6:['A','ue'],7:['B','ue'],8:['D','rec'],9:['A','min'],10:['C','otan'],
+11:['B','rec'],12:['A','rec'],13:['D','ue'],14:['C','ue'],15:['B','ue'],16:['A','otan'],17:['D','ue'],18:['C','min'],19:['A','min'],20:['B','otan'],
+21:['D','ue'],22:['B','ue'],23:['A','min'],24:['C','otan'],25:['A','otan'],26:['D','otan'],27:['B','rec'],28:['C','min'],29:['A','min'],30:['B','rec'],
+31:['B','ue'],32:['A','otan'],33:['D','otan'],34:['C','ue'],35:['B','rec'],36:['C','ue'],37:['A','otan'],38:['D','min'],39:['B','ue'],40:['C','min'],
+41:['B','ue'],42:['D','otan'],43:['C','rec'],44:['A','rec'],45:['B','min']};
+
+function C(n, conceito, pergunta, alternativas, explicacao) {
+  const [letra, eixo] = GAB[n];
+  const nivel = (n <= 10 || (n >= 31 && n <= 35)) ? 1 : ((n <= 20 || (n >= 36 && n <= 40)) ? 2 : 3);
+  return { n, nivel, eixo, conceito, pergunta, alternativas, correta: 'ABCD'.indexOf(letra), explicacao };
+}
+
+const CARTAS = [
+C(1,'Reconhecimento','O que significa um país “reconhecer” o Kosovo?',['Aceitá-lo como Estado independente e soberano','Apoiar a posição da Sérvia','Enviar tropas ao território','Ter um acordo comercial com ele'],'Reconhecer um país é aceitá-lo formalmente como Estado independente e soberano.'),
+C(2,'Aliança','Qual aliança militar mantém tropas de paz no Kosovo?',['ONU','União Europeia','OTAN','Mercosul'],'A força de paz no Kosovo (KFOR) é liderada pela OTAN.'),
+C(3,'Minorias','No Kosovo, qual comunidade é minoria e vive concentrada sobretudo no norte?',['Albaneses','Sérvios','Turcos','Gregos'],'Os sérvios são a principal minoria do Kosovo e vivem sobretudo no norte.'),
+C(4,'Reconhecimento','Por que o Kosovo ainda não é membro pleno da ONU?',['Nunca pediu para entrar','Não tem governo próprio','Sua população é pequena demais','Países com poder de veto no Conselho de Segurança bloqueiam'],'A entrada na ONU passa pelo Conselho de Segurança, onde membros com poder de veto bloqueiam a candidatura.'),
+C(5,'Aliança','Qual potência é a principal aliada diplomática da Sérvia contra a independência do Kosovo?',['Estados Unidos','Reino Unido','Rússia','Alemanha'],'A Rússia, com poder de veto na ONU, é a principal aliada diplomática da Sérvia nessa disputa.'),
+C(6,'União Europeia','Que “prêmio” a União Europeia oferece para Sérvia e Kosovo normalizarem suas relações?',['O caminho para entrar no bloco','Armas e equipamento militar','Um assento no Conselho de Segurança','O perdão de dívidas com a OTAN'],'A UE usa a perspectiva de adesão ao bloco como incentivo para a normalização das relações.'),
+C(7,'Sanções','Quando um país aumenta muito as tarifas sobre produtos do vizinho para pressioná-lo politicamente, isso é:',['Uma aliança','Uma sanção econômica','Dissuasão militar','Reconhecimento diplomático'],'Elevar tarifas para pressionar politicamente outro país é uma forma de sanção econômica.'),
+C(8,'Opinião Pública','Em qual área o Kosovo conseguiu mais aceitação internacional, mesmo fora da ONU?',['Energia nuclear','Programa espacial','Controle de armas','Esporte'],'No esporte, o Kosovo é aceito em entidades e competições internacionais mesmo sem ser membro da ONU.'),
+C(9,'Recursos e Território','Em cidades do norte do Kosovo, um rio separa os bairros. Por que isso virou símbolo do conflito?',['Divide a comunidade sérvia da albanesa','Marca a fronteira com a Albânia','É uma fonte de petróleo','É uma rota exclusiva da OTAN'],'O rio separa bairros de maioria sérvia e de maioria albanesa, simbolizando a divisão entre as comunidades.'),
+C(10,'Dissuasão','Qual é o principal papel das tropas internacionais no Kosovo hoje?',['Invadir a Sérvia','Cobrar impostos','Manter a segurança e evitar uma nova guerra','Organizar eleições na Sérvia'],'As tropas internacionais atuam para manter a segurança e evitar a retomada de um conflito armado.'),
+C(11,'Reconhecimento','Em que a Sérvia se apoia para dizer que o Kosovo ainda faz parte do seu território?',['Um tratado com a União Europeia','Uma resolução da ONU do pós-guerra que não definiu o status final','Um referendo feito no Kosovo','Uma decisão da OTAN'],'A Sérvia cita a resolução da ONU do pós-guerra, que encerrou o conflito sem definir o status final do Kosovo.'),
+C(12,'Opinião Pública','Ao analisar a declaração de independência do Kosovo, a Corte Internacional de Justiça concluiu que ela:',['Não violou o direito internacional','Era ilegal e deveria ser anulada','Dependia do aval da Sérvia','Precisava de um referendo da ONU'],'Em seu parecer de 2010, a Corte concluiu que a declaração de independência não violou o direito internacional.'),
+C(13,'Sanções','Quando o Kosovo impôs tarifas altíssimas a produtos sérvios, como reagiram os aliados ocidentais?',['Aplaudiram a medida','Aplicaram as mesmas tarifas','Ignoraram o caso','Pressionaram pela retirada, pois travava o diálogo'],'Aliados ocidentais pediram a retirada das tarifas por considerarem que elas travavam o diálogo.'),
+C(14,'Reconhecimento','Por que alguns países da própria União Europeia não reconhecem o Kosovo?',['Têm aliança militar com a Sérvia','Compram energia do Kosovo','Temem incentivar separatismos dentro de casa','São contra o euro'],'Alguns membros da UE temem que reconhecer o Kosovo estimule movimentos separatistas em seus próprios territórios.'),
+C(15,'Sanções','Por que a Sérvia resiste a aderir às sanções ocidentais contra a Rússia?',['É membro da OTAN','Depende da energia russa e do apoio russo na ONU','Sua Constituição proíbe sanções','A Rússia financia a União Europeia'],'A Sérvia depende da energia russa e do apoio da Rússia na ONU, o que pesa contra aderir às sanções.'),
+C(16,'Aliança','A Sérvia se declara “militarmente neutra”. Isso significa que ela:',['Não pretende entrar na OTAN nem em outra aliança militar','Não tem Forças Armadas','Saiu da ONU','É aliada militar formal da Rússia'],'Neutralidade militar significa não integrar a OTAN nem outra aliança militar formal.'),
+C(17,'União Europeia','Quando a União Europeia corta verbas ou suspende reuniões com o Kosovo, o objetivo costuma ser:',['Expulsá-lo da OTAN','Forçar a reunificação com a Sérvia','Aumentar tarifas comerciais','Pressionar pela redução das tensões com a minoria sérvia'],'Esse tipo de medida costuma ser usado para pressionar por menos tensão com a minoria sérvia.'),
+C(18,'Interdependência','Muitos sérvios do Kosovo recebem salários e pensões pagos pela Sérvia. Isso mostra que:',['O Kosovo não tem economia própria','A União Europeia financia o norte','Belgrado mantém influência por meio de laços econômicos','O Kosovo adotou a moeda sérvia'],'Os pagamentos mostram que Belgrado mantém influência sobre a comunidade sérvia por meio de laços econômicos.'),
+C(19,'Recursos e Território','Além da questão étnica, por que o norte do Kosovo é estratégico?',['Concentra minas, rios e infraestrutura de água e energia','Tem saída para o mar','Tem as maiores reservas de petróleo da Europa','É a única rota aérea da região'],'O norte concentra minas, rios e infraestrutura de água e energia, o que lhe dá valor estratégico.'),
+C(20,'Dissuasão','Por que tropas da OTAN no Kosovo dissuadem ataques, mesmo o Kosovo não sendo membro da aliança?',['O Kosovo tem proteção automática da aliança','Atacar o Kosovo significaria atingir soldados de países da OTAN','A ONU proibiu o exército sérvio','A Sérvia não tem armas'],'Atacar o Kosovo significaria atingir soldados de países da OTAN, o que eleva muito o custo do ataque.'),
+C(21,'Interdependência','Kosovo e Sérvia dividem uma rede elétrica regional. Uma briga entre eles já atrasou relógios em vários países europeus. Isso mostra que:',['Ciberataques são a maior ameaça','A Europa não depende de energia importada','A OTAN controla a rede elétrica','Por causa da interdependência, conflitos locais geram efeitos regionais'],'Como a rede é compartilhada, uma disputa local pode afetar vários países, o que ilustra a interdependência.'),
+C(22,'Reconhecimento','Nas propostas de normalização mediadas pela UE, qual é o meio-termo pedido à Sérvia?',['Reconhecer o Kosovo imediatamente','Não bloquear a entrada do Kosovo em organizações, sem reconhecê-lo formalmente','Ceder território à Albânia','Entrar na OTAN'],'O meio-termo pede que a Sérvia não impeça a participação do Kosovo em organizações, sem exigir reconhecimento formal.'),
+C(23,'Minorias','Dar autonomia aos municípios de maioria sérvia gera atrito porque o governo do Kosovo teme:',['Que vire um “Estado dentro do Estado”','Que custe caro demais','Que reduza o turismo','Que mude a moeda do país'],'O governo kosovar teme que a autonomia crie uma estrutura paralela, um “Estado dentro do Estado”.'),
+C(24,'Dissuasão','Quando a Sérvia concentra tropas perto da fronteira, qual resposta da OTAN funciona como dissuasão?',['Retirar as tropas do Kosovo','Expulsar a Sérvia da ONU','Reforçar as tropas no Kosovo','Bombardear a Sérvia preventivamente'],'Reforçar as tropas no Kosovo sinaliza capacidade de resposta e desencoraja uma ação militar.'),
+C(25,'Opinião Pública','Durante a guerra, relatos de violência contra civis albaneses tiveram que efeito internacional?',['Mobilizaram o Ocidente a favor da intervenção militar','Levaram a Rússia a apoiar o Kosovo','Encerraram o conflito sem intervenção','Fizeram a ONU reconhecer o Kosovo'],'Os relatos ampliaram o apoio ocidental à intervenção militar da OTAN em 1999.'),
+C(26,'Aliança','Pactos de defesa entre o Kosovo e vizinhos como a Albânia costumam ser vistos pela Sérvia como:',['Irrelevantes','Um passo para a paz','Um pedido de entrada na UE','Um bloco hostil que a ameaça'],'A Sérvia tende a interpretar esses pactos como a formação de um bloco hostil contra ela.'),
+C(27,'Opinião Pública','Como a Rússia usa o “precedente do Kosovo” em sua política externa?',['Para pedir a entrada do Kosovo na ONU','Para justificar apoio a regiões separatistas em sua vizinhança','Para tentar entrar na OTAN','Para defender sanções contra a Sérvia'],'A Rússia cita o caso do Kosovo para justificar seu apoio a regiões separatistas em países vizinhos.'),
+C(28,'Minorias','Por que os mosteiros ortodoxos no Kosovo pesam tanto na disputa?',['Guardam reservas de ouro','Funcionam como bases militares','São símbolos da identidade sérvia e mobilizam apoio internacional','Pertencem à União Europeia'],'Os mosteiros são símbolos da identidade e do patrimônio religioso sérvios, e mobilizam apoio internacional.'),
+C(29,'Recursos e Território','Ataques a canais de água e linhas de energia no Kosovo são um exemplo de:',['Pressão sobre recursos estratégicos sem guerra aberta','Cooperação econômica','Reconhecimento diplomático','Sanção aprovada pela ONU'],'Atingir água e energia é uma forma de pressão sobre recursos estratégicos sem declarar guerra.'),
+C(30,'Reconhecimento','Por que a Sérvia faz campanha para que países retirem o reconhecimento do Kosovo?',['Para entrar na OTAN','Para mostrar que o Kosovo não tem apoio e travar sua entrada em organizações','Para baixar tarifas comerciais','Para atrair investimento chinês'],'A campanha busca mostrar que o Kosovo tem pouco apoio e dificultar sua entrada em organizações internacionais.'),
+C(31,'Interdependência','Por que uma guerra comercial entre Kosovo e Sérvia prejudica os dois lados?',['Porque os dois não fazem comércio entre si','Porque empresas e consumidores dos dois lados dependem desse comércio','Porque a OTAN cobra multas','Porque usam a mesma moeda oficial'],'Empresas e consumidores dos dois lados dependem desse comércio, então ambos sofrem com a guerra comercial.'),
+C(32,'Aliança','Qual país vizinho tem a maior afinidade étnica com a maioria do Kosovo e é seu principal apoiador na região?',['Albânia','Grécia','Hungria','Croácia'],'A Albânia compartilha a identidade étnica da maioria kosovar e é uma de suas principais apoiadoras na região.'),
+C(33,'Dissuasão','Em relações internacionais, “dissuasão” significa:',['Atacar primeiro','Assinar um acordo de paz','Votar contra o adversário na ONU','Mostrar ao adversário que um ataque custaria caro demais'],'Dissuadir é convencer o adversário de que atacar teria um custo alto demais.'),
+C(34,'Sanções','Qual destas medidas é uma sanção contra quem agrava as tensões nos Bálcãs?',['Enviar ajuda humanitária','Convidá-lo para a OTAN','Congelar verbas e acordos com ele','Reconhecer sua independência'],'Congelar verbas e acordos é uma sanção usada para pressionar quem agrava as tensões.'),
+C(35,'Opinião Pública','Por que Kosovo e Sérvia disputam a imagem que passam ao mundo?',['Apenas para atrair turistas','Porque o apoio internacional pesa em reconhecimentos e votações','Porque a ONU exige campanhas','Porque não têm Forças Armadas'],'O apoio internacional influencia reconhecimentos e votações, por isso a imagem externa importa.'),
+C(36,'Interdependência','A União Europeia é o maior parceiro comercial da Sérvia. Como isso afeta a posição sérvia?',['Obriga a Sérvia a reconhecer o Kosovo','Faz a Sérvia romper com a Rússia','Faz a Sérvia equilibrar seus laços com a UE e com a Rússia','Não tem efeito algum'],'A dependência comercial da UE leva a Sérvia a equilibrar suas relações com a UE e com a Rússia.'),
+C(37,'Dissuasão','Por que a Sérvia compra armamentos de vários países diferentes?',['Para reforçar sua dissuasão sem depender de um único fornecedor','Para revendê-los ao Kosovo','Porque a OTAN exige','Para entrar na União Europeia'],'Diversificar fornecedores reforça a dissuasão sérvia sem criar dependência de uma única fonte.'),
+C(38,'Minorias','Qual é uma garantia que a minoria sérvia no Kosovo costuma reivindicar?',['Uma moeda própria','Um exército próprio','Isenção de impostos','Proteção da língua, das escolas e do patrimônio religioso'],'A minoria sérvia costuma reivindicar proteção de sua língua, de suas escolas e de seu patrimônio religioso.'),
+C(39,'União Europeia','Para avançar rumo à União Europeia, o que se espera de Sérvia e Kosovo?',['Que entrem primeiro na OTAN','Que normalizem suas relações e resolvam disputas pendentes','Que adotem uma moeda comum','Que saiam da ONU'],'O caminho para a UE exige que os dois normalizem suas relações e resolvam as disputas pendentes.'),
+C(40,'Recursos e Território','Por que o controle das passagens de fronteira entre Kosovo e Sérvia gera tantas crises?',['Porque são pontos turísticos','Porque lá ficam as maiores minas','Porque quem controla a fronteira controla comércio, circulação e soberania','Porque a ONU cobra taxas ali'],'Quem controla as passagens controla o comércio e a circulação de pessoas, e isso envolve a soberania.'),
+C(41,'Sanções','Por que sanções e punições externas nem sempre mudam o comportamento de Kosovo ou Sérvia?',['Porque não existem sanções nos Bálcãs','Porque resistir à pressão externa pode render apoio político interno','Porque a ONU proíbe sanções','Porque os dois não comerciam com ninguém'],'Resistir à pressão externa pode gerar apoio político interno, o que reduz o efeito das sanções.'),
+C(42,'Dissuasão','A Sérvia não é da OTAN, mas está cercada por países membros. Qual o efeito estratégico disso?',['Obriga a Sérvia a entrar na aliança','Torna a Sérvia membro automático','Não tem efeito algum','Aumenta muito o custo de qualquer ação militar sérvia na região'],'Estar cercada por membros da OTAN aumenta muito o custo de qualquer ação militar sérvia na região.'),
+C(43,'Interdependência','Que efeito os investimentos chineses em infraestrutura na Sérvia têm na disputa?',['Obrigam a China a reconhecer o Kosovo','Afastam a Sérvia da Rússia','Ampliam as opções da Sérvia e reduzem sua dependência do Ocidente','Garantem a entrada da Sérvia na UE'],'Os investimentos ampliam as opções da Sérvia e reduzem sua dependência do Ocidente.'),
+C(44,'Opinião Pública','Por que os apoiadores da independência chamam o Kosovo de “caso único”?',['Para evitar que ele sirva de precedente a outros separatismos','Porque é o menor país do mundo','Porque não tem minorias','Porque a ONU o declarou assim'],'Eles usam a expressão para evitar que o caso sirva de precedente a outros movimentos separatistas.'),
+C(45,'Recursos e Território','Por que trocar territórios entre Kosovo e Sérvia seguindo linhas étnicas é uma ideia polêmica?',['A OTAN não teria tropas suficientes','Pode estimular redesenhos de fronteiras em outras regiões multiétnicas','Os dois países já são da UE','Ninguém vive nessas áreas'],'Críticos temem que a troca estimule pedidos de redesenho de fronteiras em outras regiões multiétnicas.')
+];
+
+/* =====================================================================
+   ÍCONES (SVG de traço)
+   ===================================================================== */
+function pontosUE(){ let s=''; for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; s+=`<circle cx="${(12+8*Math.cos(a)).toFixed(2)}" cy="${(12+8*Math.sin(a)).toFixed(2)}" r="1.15"/>`; } return s; }
+const ICONES = {
+  flag:'<path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4.5 2 4.5 5"/>',
+  eu: pontosUE(),
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  pause:'<path d="M8 5v14M16 5v14"/>',
+  play:'<path d="M7 4l13 8-13 8z"/>',
+  clock:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 .5c0 1.7-2.5 2-2.5 4M12 17v.5"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  check:'<path d="M4 12l5 5L20 6"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/>',
+  bolt:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+  link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>',
+  mega:'<path d="M3 10v4l4 1 9 5V5L7 9z"/><path d="M19 9a4 4 0 010 6"/>',
+  terr:'<path d="M3 20l6-10 4 6 3-4 5 8z"/>',
+  arrows:'<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
+  star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  cross:'<path d="M12 3v18M3 12h18"/>',
+  compass:'<path d="M12 2l2.5 8.5L22 12l-7.5 1.5L12 22l-2.5-8.5L2 12l7.5-1.5z"/>',
+  home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+  restart:'<path d="M4 12a8 8 0 108-8H7M7 1L4 4l3 3"/>'
+};
+const ICONE_CONCEITO = {'Reconhecimento':'flag','Aliança':'link','Minorias':'users','União Europeia':'eu','Sanções':'lock','Opinião Pública':'mega','Recursos e Território':'terr','Dissuasão':'shield','Interdependência':'arrows'};
+function ico(nome, tam, sw){ tam = tam || 22; return `<svg class="ico" viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${sw||2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONES[nome]||''}</svg>`; }
+const ARAME = '<svg class="arame" width="100%" height="16" aria-hidden="true"><rect width="100%" height="16" fill="url(#arame)"/></svg>';
+
+/* =====================================================================
+   ESTADO
+   ===================================================================== */
+const EIXOS = Object.keys(CONFIG.eixos);
+let state = null;              // partida em andamento
+const ui = { vis: [0,0,0,0], lock: false, bannerRes: null, calib: false, hopId: null };
+const TAB = CONFIG.tabuleiro;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = (ms) => ms > 0 ? new Promise(r => setTimeout(r, ms)) : Promise.resolve();
+const rnd = (n) => Math.floor(Math.random() * n);
+const jog = () => state.jogadores[state.atual];
+const proximoIdx = (i) => (i + 1) % state.jogadores.length;
+const leitorIdx = () => (state.atual + CONFIG.leitorDeslocamento + state.jogadores.length) % state.jogadores.length;
+
+function novoEstado(modo) {
+  const jogadores = CONFIG.jogadores.map((d, i) => ({
+    idx: i, id: d.id, nome: d.nome, pos: 0, ultimoEixo: null, escudo: false, sem3: false,
+    acertos: {1:0, 2:0, 3:0}, respondidas: 0, porEixo: Object.fromEntries(EIXOS.map(e => [e, {a:0, t:0}])), sorteio: 0
+  }));
+  const inicial = rnd(jogadores.length);
+  return {
+    v: 1, modo, jogadores, inicial, atual: inicial, rodada: 1,
+    fase: 'anel', turno: null, usadas: {}, pausado: false,
+    tempoRestante: CONFIG.tempoResposta,
+    tempoJogo: CONFIG.duracaoModoTempoMin * 60 * 1000, tempoAcabou: false,
+    vencedor: null, fim: null, hist: [], turnos: [], msg: ''
+  };
+}
+
+/* ---------- persistência ---------- */
+function salvar() {
+  try { if (state && !state.fim) localStorage.setItem(CONFIG.chaveSave, JSON.stringify(state)); } catch (e) {}
+}
+function lerSave() {
+  try {
+    const s = localStorage.getItem(CONFIG.chaveSave); if (!s) return null;
+    const o = JSON.parse(s);
+    if (!o || o.v !== 1 || !Array.isArray(o.jogadores) || o.jogadores.length !== 4 || o.fim) return null;
+    return o;
+  } catch (e) { return null; }
+}
+function apagarSave() { try { localStorage.removeItem(CONFIG.chaveSave); } catch (e) {} }
+
+/* =====================================================================
+   TABULEIRO (desenho)
+   ===================================================================== */
+const pctX = (x) => (x / TAB.largura * 100).toFixed(4) + '%';
+const pctY = (y) => (y / TAB.altura * 100).toFixed(4) + '%';
+function posAbs(el, x, y) { el.style.left = pctX(x); el.style.top = pctY(y); }
+function dotHTML(i, tam) {
+  const d = CONFIG.jogadores[i];
+  return `<span class="dot" style="background:${d.cor};color:${d.tinta}${tam?`;width:${tam}px;height:${tam}px`:''}">${ico(d.icone, 14, 2.2)}</span>`;
+}
+function chipHTML(i) { return `<span class="chip">${dotHTML(i)}${esc(CONFIG.jogadores[i].nome)}</span>`; }
+
+function montarTabuleiro() {
+  $('#boardImg').src = TAB.imagem;
+  // casas
+  const cc = $('#camadaCasas'); cc.innerHTML = '';
+  for (let n = 1; n <= CONFIG.casaFinal; n++) {
+    const [x, y] = TAB.casas[n];
+    const e = document.createElement('div');
+    e.className = 'casa abs' + (CONFIG.eventos[n] ? ' ev' : '');
+    e.id = 'casa' + n; e.style.width = (TAB.casaL / TAB.largura * 100) + '%'; e.style.height = (TAB.casaA / TAB.altura * 100) + '%';
+    posAbs(e, x, y);
+    const ev = CONFIG.eventos[n];
+    e.innerHTML = `<span class="num">${n}</span>` + (ev ? `<svg class="evi" viewBox="0 0 24 24" fill="currentColor" stroke="none">${ICONES.bolt}</svg>` : '');
+    if (ev) e.title = `Casa ${n}: ${ev.nome}`;
+    cc.appendChild(e);
+  }
+  // anéis
+  const ca = $('#camadaAneis'); ca.innerHTML = '';
+  for (const [cor, a] of Object.entries(TAB.aneis)) {
+    const eixo = CONFIG.aneis[cor], ex = CONFIG.eixos[eixo];
+    const b = document.createElement('button');
+    b.className = 'anel abs'; b.dataset.cor = cor; b.style.setProperty('--rc', TAB.corAnel[cor]);
+    b.style.width = (a.r * 2 / TAB.largura * 100) + '%';
+    posAbs(b, a.x, a.y);
+    b.setAttribute('aria-label', 'Pilha ' + ex.nome);
+    const fs = ex.nome.length > 11 ? 1.02 : (ex.nome.length > 6 ? 1.3 : 1.7);
+    b.innerHTML = `${ico(ex.icone, 28, 1.9)}<span class="t" style="font-size:${fs}cqw">${esc(ex.nome)}</span><span class="bq">${ico('lock',16)}<br>Usado no turno anterior</span>`;
+    b.addEventListener('click', () => escolherAnel(cor));
+    ca.appendChild(b);
+  }
+  // retângulo central
+  const c = $('#centro'); posAbs(c, TAB.retangulo.x + TAB.retangulo.l / 2, TAB.retangulo.y + TAB.retangulo.a / 2);
+  c.style.width = (TAB.retangulo.l / TAB.largura * 100) + '%'; c.style.height = (TAB.retangulo.a / TAB.altura * 100) + '%';
+  // peões
+  const cp = $('#camadaPeoes'); cp.innerHTML = '';
+  CONFIG.jogadores.forEach((d, i) => {
+    const p = document.createElement('div');
+    p.className = 'peao abs'; p.id = 'peao' + i; p.title = d.nome;
+    p.style.background = d.cor; p.style.color = d.tinta; p.style.width = (TAB.peao / TAB.largura * 100) + '%';
+    p.innerHTML = ico(d.icone, 16, 2.4);
+    cp.appendChild(p);
+  });
+  // calibração (contornos de todas as posições)
+  const cb = $('#calib'); cb.innerHTML = '';
+  for (let n = 0; n <= CONFIG.casaFinal; n++) {
+    const [x, y] = TAB.casas[n];
+    const w = n === 0 ? TAB.inicio.l : TAB.casaL, h = n === 0 ? TAB.inicio.a : TAB.casaA;
+    const e = document.createElement('div'); e.className = 'cb'; e.style.cssText = `left:${pctX(x)};top:${pctY(y)};width:${w/TAB.largura*100}%;height:${h/TAB.altura*100}%;${n===0?'border-radius:12px':''}`;
+    e.textContent = n; cb.appendChild(e);
+    for (const [dx, dy] of slotsPeoes(n, 4)) { const d = document.createElement('div'); d.className = 'cbp'; d.style.cssText = `left:${pctX(x+dx)};top:${pctY(y+dy)}`; cb.appendChild(d); }
+  }
+  for (const [cor, a] of Object.entries(TAB.aneis)) {
+    const e = document.createElement('div'); e.className = 'cb'; e.style.cssText = `left:${pctX(a.x)};top:${pctY(a.y)};width:${a.r*2/TAB.largura*100}%;aspect-ratio:1;border-color:#00a;color:#00a;background:rgba(0,0,200,.08)`; e.textContent = cor; cb.appendChild(e);
+  }
+  const r = TAB.retangulo, e = document.createElement('div'); e.className = 'cb';
+  e.style.cssText = `left:${pctX(r.x+r.l/2)};top:${pctY(r.y+r.a/2)};width:${r.l/TAB.largura*100}%;height:${r.a/TAB.altura*100}%;border-radius:0;border-color:#070;color:#070;background:rgba(0,150,0,.1)`; e.textContent = 'carta em jogo'; cb.appendChild(e);
+}
+
+/* posições dos peões dentro de uma casa (deslocamentos em px da imagem) */
+function slotsPeoes(casa, n) {
+  const out = [], s = TAB.peao;
+  if (casa === 0) {
+    const dx = s * 1.12, dy = s * 1.06;
+    const base = [[-dx/2,-dy/2],[dx/2,-dy/2],[-dx/2,dy/2],[dx/2,dy/2]];
+    for (let i = 0; i < n; i++) out.push(base[i]);
+    return out;
+  }
+  const tam = tamanhoPeao(casa, n), largura = TAB.casaL - 6;
+  const passo = n <= 1 ? 0 : Math.min(tam * 1.1, (largura - tam) / (n - 1));
+  for (let i = 0; i < n; i++) out.push([(i - (n - 1) / 2) * passo, 4]);
+  return out;
+}
+/* peões na mesma casa ficam lado a lado; com 4 numa pílula eles encolhem um pouco para não se sobrepor */
+function tamanhoPeao(casa, n) { return (casa !== 0 && n >= 4) ? Math.round(TAB.peao * 0.78) : TAB.peao; }
+function posicionarPeoes() {
+  const grupos = {};
+  ui.vis.forEach((p, i) => { (grupos[p] = grupos[p] || []).push(i); });
+  for (const [casa, ids] of Object.entries(grupos)) {
+    const slots = slotsPeoes(+casa, ids.length), [x, y] = TAB.casas[+casa];
+    const tam = tamanhoPeao(+casa, ids.length);
+    ids.forEach((id, k) => { const el = $('#peao' + id); el.style.width = (tam / TAB.largura * 100) + '%'; posAbs(el, x + slots[k][0], y + slots[k][1]); });
+  }
+  CONFIG.jogadores.forEach((_, i) => $('#peao' + i).classList.toggle('atual', !!state && !state.fim && i === state.atual));
+}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function renderTudo() { renderTabuleiro(); renderLateral(); renderModal(); renderPausa(); }
+
+function renderTabuleiro() {
+  if (!ui.animando) { ui.vis = state.jogadores.map(j => j.pos); }
+  posicionarPeoes();
+  // anéis
+  const emAnel = state.fase === 'anel' && !state.fim && !ui.animando;
+  document.querySelectorAll('.anel').forEach(b => {
+    const eixo = CONFIG.aneis[b.dataset.cor];
+    const bloq = emAnel && jog().ultimoEixo === eixo;
+    b.classList.toggle('ativo', emAnel && !bloq);
+    b.classList.toggle('bloq', bloq);
+    b.disabled = !(emAnel && !bloq);
+    b.setAttribute('aria-disabled', b.disabled ? 'true' : 'false');
+  });
+  // casas-alvo de eventos
+  renderCentro();
+}
+
+function renderCentro() {
+  const c = $('#centro'), t = state.turno, f = state.fase;
+  if (state.fim) { c.innerHTML = `<div><div class="c1">Fim de jogo</div></div>`; return; }
+  const j = jog();
+  if (f === 'anel' && !ui.animando) {
+    const extra = t && t.extra === 2;
+    c.innerHTML = `<div><div class="c1">${extra ? 'Pergunta extra' : 'Vez de ' + esc(j.nome)}</div><div class="c2">${extra ? esc(j.nome) + ': escolha outra pilha (nível 1)' : 'Escolha uma pilha (anel colorido)'}</div></div>`;
+  } else if (f === 'nivel') {
+    c.innerHTML = `<div><div class="c1">Vez de ${esc(j.nome)}</div><div class="c2">Escolha o nível da pergunta</div></div>`;
+  } else if ((f === 'pergunta' || f === 'resultado' || f === 'animando') && t && t.carta) {
+    const card = CARTAS.find(x => x.n === t.carta), nv = CONFIG.niveis[card.nivel];
+    let r = '';
+    if (f !== 'pergunta' && t.correto != null) r = t.correto ? `<div class="r ok">Acertou</div>` : `<div class="r no">${t.resp == null ? 'Tempo esgotado' : 'Errou'}</div>`;
+    c.innerHTML = `<div class="mc" style="--cn:${nv.cor}"><b>CARTA Nº ${String(card.n).padStart(2,'0')}</b><span>${esc(card.conceito)} · ${nv.nome}</span>${r}${ui.animando && state.msg ? `<div class="c2" style="font-size:1.05cqw">${esc(state.msg)}</div>` : ''}</div>`;
+  } else {
+    c.innerHTML = state.msg ? `<div><div class="c2">${esc(state.msg)}</div></div>` : '';
+  }
+}
+
+function fmtTempo(ms) { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+
+function renderLateral() {
+  if (!state) return;
+  const j = jog(), t = state.turno;
+  const eventos = Object.entries(CONFIG.eventos).map(([c, e]) => `<li><b>Casa ${c}</b><span>${esc(e.nome)}</span></li>`).join('');
+  const rel = state.modo === 'tempo'
+    ? `<div class="relogio ${state.tempoAcabou ? 'fim' : ''}" id="relogio">${ico('clock', 26)}<span id="relogioTxt">${fmtTempo(state.tempoJogo)}</span><small>${state.tempoAcabou ? 'Última rodada' : 'Modo por tempo'}</small></div>`
+    : `<div class="relogio">${ico('flag', 26)}<small style="font-size:1rem">Modo normal · primeiro à casa ${CONFIG.casaFinal}</small></div>`;
+  const flags = [];
+  if (t && !state.fim) {
+    if (t.escudo) flags.push(`<span class="flag">${ico('shield',14)}Aliança ativa</span>`);
+    if (t.sem3) flags.push(`<span class="flag red">${ico('lock',14)}Sem nível 3</span>`);
+    if (t.extra === 2) flags.push(`<span class="flag">${ico('mega',14)}Pergunta extra</span>`);
+  }
+  const lista = state.jogadores.map((p, i) => `
+    <div class="jl ${i === state.atual && !state.fim ? 'atual' : ''}">
+      ${dotHTML(i, 28)}
+      <div><div class="nm">${esc(p.nome)}</div><div class="st">${p.acertos[1] + p.acertos[2] + p.acertos[3]} acertos · ${p.acertos[3]} no nível 3</div></div>
+      <div class="cs">${p.pos}<small>CASA</small></div>
+    </div>`).join('');
+  const dica = { anel: 'Escolher a pilha', nivel: 'Escolher o nível', pergunta: 'Respondendo (' + CONFIG.tempoResposta + ' s)', resultado: 'Resultado da resposta', animando: 'Movendo o peão' }[state.fase] || '';
+  $('#side').innerHTML = `
+    <div class="topo">
+      <div class="tit">MASTER · KOSOVO × SÉRVIA</div>
+      <button class="ib" id="bPausa" title="Pausar (P)" aria-label="Pausar">${ico('pause')}</button>
+      <button class="ib" id="bRegras" title="Regras" aria-label="Regras">${ico('help')}</button>
+      <button class="ib" id="bTela" title="Tela cheia" aria-label="Tela cheia">${ico('expand')}</button>
+      <button class="ib" id="bMenu" title="Voltar ao início" aria-label="Voltar ao início">${ico('home')}</button>
+    </div>
+    <div class="pn">${rel}</div>
+    <div class="pn vez">
+      <h3>Rodada ${state.rodada}</h3>
+      <div>Vez de ${chipHTML(state.atual)}</div>
+      <div>Leitor (à esquerda): ${chipHTML(leitorIdx())}</div>
+      <div class="dica">${dica}</div>
+      <div>${flags.join('')}</div>
+    </div>
+    <div class="pn"><h3>Delegações</h3><div class="jlist">${lista}</div></div>
+    <div class="pn"><h3>Casas de evento</h3><ul class="evl">${eventos}</ul></div>`;
+  $('#bPausa').onclick = () => alternarPausa();
+  $('#bRegras').onclick = () => mostrarRegras();
+  $('#bTela').onclick = () => { try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) {} };
+  $('#bMenu').onclick = () => { salvar(); mostrarInicio(); };
+}
+
+/* ---------- modais ---------- */
+function fecharModal() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; }
+function renderModal() {
+  if (!state || state.fim) return;
+  const t = state.turno, f = state.fase;
+  if (ui.animando) { fecharModal(); return; }
+  if (f === 'nivel') return renderModalNivel();
+  if (f === 'pergunta' || f === 'resultado') return renderModalCarta();
+  fecharModal();
+}
+
+function renderModalNivel() {
+  const t = state.turno, j = jog(), m = $('#modal');
+  const botoes = [1, 2, 3].map(n => {
+    const nv = CONFIG.niveis[n], bloq = n === 3 && t.sem3;
+    const perde = n === 3 ? (t.escudo ? 'Erra: fica (Aliança protege)' : `Erra: volta ${CONFIG.voltaAoErrarNivel3} casa`) : 'Erra: fica onde está';
+    return `<button class="nv" data-n="${n}" style="--nc:${nv.cor};--nt:${nv.texto}" ${bloq ? 'disabled' : ''}>
+      <div class="k">${n}</div>
+      <div><b>${nv.nome}</b><span>${bloq ? 'Bloqueado neste turno pela Dissuasão' : `Acerta: avança ${nv.avanco} casa${nv.avanco > 1 ? 's' : ''} · ${perde}`}</span></div></button>`;
+  }).join('');
+  m.innerHTML = `<div class="dossie nivelBox" role="dialog" aria-label="Escolha o nível">
+    <span class="carimbo">Vez de ${esc(j.nome)}</span>
+    <h2>Escolha o nível</h2>
+    <div class="sub">Pilha: ${esc(CONFIG.eixos[t.eixo].nome)} · decida antes de ver a pergunta (teclas 1, 2 ou 3)</div>
+    ${ARAME}
+    <div class="nvs">${botoes}</div></div>`;
+  m.hidden = false;
+  m.querySelectorAll('.nv').forEach(b => b.addEventListener('click', () => escolherNivel(+b.dataset.n)));
+}
+
+function textoEfeito(card, t) {
+  const j = jog();
+  if (t.correto) {
+    if (t.extra === 2) return `Avança 1 casa (respeitando o limite de ${CONFIG.maxAvancoPorTurno} por turno).`;
+    return `Avança ${card.nivel} casa${card.nivel > 1 ? 's' : ''}.`;
+  }
+  if (card.nivel === 3 && t.extra !== 2) return t.escudo ? 'Aliança ativa: não volta.' : `Volta ${CONFIG.voltaAoErrarNivel3} casa${j.pos === 0 ? ' (já está no Início)' : ''}.`;
+  return 'Fica onde está.';
+}
+
+function renderModalCarta() {
+  const t = state.turno, card = CARTAS.find(x => x.n === t.carta), nv = CONFIG.niveis[card.nivel], m = $('#modal');
+  const revel = state.fase === 'resultado';
+  const alts = card.alternativas.map((a, i) => {
+    let cls = 'alt', extra = '';
+    if (revel) {
+      if (i === card.correta) { cls += ' certa'; extra = `<span class="res">${ico('check', 22, 3)} Correta</span>`; }
+      else if (i === t.resp) { cls += ' errada'; extra = `<span class="res">${ico('x', 22, 3)} Resposta dada</span>`; }
+      else cls += ' apagada';
+    }
+    return `<button class="${cls}" data-i="${i}" ${revel ? 'disabled' : ''}><span class="l">${'ABCD'[i]}</span><span>${esc(a)}</span>${extra}</button>`;
+  }).join('');
+  let res = '';
+  if (revel) {
+    const titulo = t.correto ? 'Resposta correta' : (t.resp == null ? 'Tempo esgotado' : 'Resposta errada');
+    res = `<div class="resultado">
+      <div class="tx"><h4 class="${t.correto ? 'ok' : 'no'}">${titulo}</h4>
+        <div class="ef">${esc(textoEfeito(card, t))}</div>
+        <div class="ex"><b>Por quê:</b> ${esc(card.explicacao)}</div></div>
+      <button class="btn" id="bCont">Continuar ${ico('play', 18)}</button></div>`;
+  }
+  const dash = 2 * Math.PI * 28;
+  m.innerHTML = `<div class="dossie carta" style="--nc:${nv.cor};--nt:${nv.texto}" role="dialog" aria-label="Carta ${card.n}">
+    <div class="faixa"><span>${nv.nome.toUpperCase()}</span></div>
+    <div class="corpo">
+      <div class="topc">
+        <span class="carimbo">Carta Nº ${String(card.n).padStart(2, '0')}</span>
+        <span class="conceito">${ico(ICONE_CONCEITO[card.conceito] || 'flag', 18)}${esc(card.conceito)}</span>
+        <span class="sp"></span>
+        ${revel ? '' : `<button class="ib" id="bPausaCarta" title="Pausar (P)" aria-label="Pausar" style="background:transparent;color:var(--oliva)">${ico('pause')}</button>
+        <div class="timer" id="timer"><svg viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" id="tmrFg" cx="32" cy="32" r="28" stroke-dasharray="${dash}" stroke-dashoffset="0"/></svg><div class="n" id="tmrN"></div></div>`}
+      </div>
+      <div class="leitor">${ico('mega', 18)} Leitor: ${chipHTML(leitorIdx())} — leia a pergunta e as alternativas em voz alta. Responde: ${chipHTML(state.atual)}</div>
+      <h2 class="pergunta">${esc(card.pergunta)}</h2>
+      ${ARAME}
+      <div class="alts">${alts}</div>
+      ${res}
+    </div></div>`;
+  m.hidden = false;
+  if (!revel) {
+    m.querySelectorAll('.alt').forEach(b => b.addEventListener('click', () => responder(+b.dataset.i)));
+    $('#bPausaCarta').onclick = () => alternarPausa();
+    atualizarTimer();
+  } else {
+    $('#bCont').addEventListener('click', continuar);
+    setTimeout(() => { const b = $('#bCont'); if (b) b.focus({ preventScroll: true }); }, 0);
+  }
+}
+
+function atualizarTimer() {
+  const n = $('#tmrN'), fg = $('#tmrFg'), tm = $('#timer');
+  if (!n || !state) return;
+  const r = Math.max(0, state.tempoRestante);
+  n.textContent = Math.ceil(r);
+  fg.setAttribute('stroke-dashoffset', (2 * Math.PI * 28 * (1 - r / CONFIG.tempoResposta)).toFixed(2));
+  tm.classList.toggle('baixo', r <= 10);
+}
+
+function renderPausa() { $('#pausa').hidden = !(state && state.pausado && !state.fim); }
+
+function mostrarRegras() {
+  const ev = Object.entries(CONFIG.eventos).map(([c, e]) => `<li><b>Casa ${c} — ${esc(e.nome)}:</b> ${esc(e.texto)}</li>`).join('');
+  const m = $('#banner');
+  m.innerHTML = `<div class="dossie tela"><span class="carimbo">Regras resumidas</span>
+    <div class="regras">
+      <h3>Objetivo</h3><p>Levar o peão da casa 0 (Início) até a casa ${CONFIG.casaFinal} (Adesão) respondendo perguntas sobre Reconhecimento, Minorias, União Europeia e OTAN.</p>
+      <h3>Na sua vez</h3>
+      <ul><li>Escolha uma pilha (anel). Não pode repetir a pilha do seu turno anterior.</li>
+      <li>Escolha o nível antes de ver a pergunta: 1 Fácil, 2 Médio, 3 Desafio. O leitor (jogador à sua esquerda) lê a carta em voz alta.</li>
+      <li>Você tem ${CONFIG.tempoResposta} segundos. Tempo esgotado conta como erro.</li>
+      <li>Acertou: avança 1, 2 ou 3 casas conforme o nível. Errou nos níveis 1 e 2: fica. Errou no nível 3: volta ${CONFIG.voltaAoErrarNivel3} casa.</li>
+      <li>Ninguém avança mais de ${CONFIG.maxAvancoPorTurno} casas por turno, somando resposta e eventos.</li></ul>
+      <h3>Casas de evento</h3><ul>${ev}</ul>
+      <h3>Fim</h3><p>Normal: vence quem chegar primeiro à casa ${CONFIG.casaFinal}. Por tempo (${CONFIG.duracaoModoTempoMin} min): termina a rodada em andamento e vence quem estiver mais à frente. Desempate: mais acertos no nível 3, depois mais acertos no total, depois sorteio.</p>
+      <h3>Teclas</h3><p>1–3 nível · A–D alternativa · P pausa · Enter continua · D calibração (Shift+D durante a pergunta).</p>
+    </div>
+    <div class="acoes" style="margin-top:10px"><button class="btn" id="bFecharRegras">Fechar</button></div></div>`;
+  m.hidden = false;
+  $('#bFecharRegras').onclick = () => { m.hidden = true; m.innerHTML = ''; };
+}
+
+/* =====================================================================
+   TELAS: início e fim
+   ===================================================================== */
+function mostrarInicio() {
+  const save = lerSave();
+  const el = $('#inicio');
+  let modoSel = 'normal';
+  const cont = save ? `<div class="pn" style="margin-bottom:14px;background:#e3dcc3"><h3>Partida salva</h3>
+      <div class="nota">Modo ${save.modo === 'tempo' ? 'por tempo' : 'normal'} · rodada ${save.rodada} · vez de ${esc(save.jogadores[save.atual].nome)} · casas: ${save.jogadores.map(p => esc(p.nome) + ' ' + p.pos).join(' · ')}</div>
+      <div class="acoes" style="margin-top:8px"><button class="btn" id="bContinuar">${ico('play', 18)} Continuar</button></div></div>` : '';
+  el.innerHTML = `<div class="dossie tela">
+    <h1><small>JOGO DE TABULEIRO EDUCATIVO</small>MASTER: KOSOVO × SÉRVIA</h1>
+    <p class="lead">Perguntas e respostas sobre o conflito entre Kosovo e Sérvia: reconhecimento, minorias, União Europeia e OTAN. Quatro delegações, um tabuleiro, uma trilha até a Adesão.</p>
+    ${ARAME}
+    ${cont}
+    <div class="deleg">${CONFIG.jogadores.map((d, i) => chipHTML(i)).join('')}</div>
+    <div class="modos">
+      <button class="modo" data-m="normal" aria-pressed="true"><b>Normal</b><span>Vence quem chegar primeiro à casa ${CONFIG.casaFinal}.</span></button>
+      <button class="modo" data-m="tempo" aria-pressed="false"><b>Por tempo · ${CONFIG.duracaoModoTempoMin} min</b><span>Ao fim do tempo termina a rodada em andamento e vence quem estiver mais à frente.</span></button>
+    </div>
+    <div class="acoes"><button class="btn" id="bNova" style="font-size:1.3rem">${ico('restart', 20)} ${save ? 'Nova partida' : 'Iniciar partida'}</button>
+      <button class="btn sec" id="bRegrasIni">${ico('help', 20)} Regras</button></div>
+  </div>`;
+  el.hidden = false; $('#modal').hidden = true; $('#pausa').hidden = true;
+  if (state) state.pausado = true;
+  el.querySelectorAll('.modo').forEach(b => b.addEventListener('click', () => {
+    modoSel = b.dataset.m; el.querySelectorAll('.modo').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  $('#bNova').onclick = () => iniciarJogo(modoSel);
+  $('#bRegrasIni').onclick = () => mostrarRegras();
+  if (save) $('#bContinuar').onclick = () => continuarSalvo(save);
+}
+
+function iniciarJogo(modo) {
+  apagarSave();
+  state = novoEstado(modo);
+  $('#inicio').hidden = true;
+  state.msg = `${CONFIG.jogadores[state.inicial].nome} foi sorteado para começar.`;
+  iniciarTurno();
+}
+
+function continuarSalvo(save) {
+  state = save; ui.animando = false; ui.lock = false;
+  $('#inicio').hidden = true;
+  state.pausado = true;   // volta pausado: ninguém perde tempo ao reabrir
+  if (state.fase === 'animando') { state.fase = 'anel'; posAnimacao(); }
+  renderTudo();
+}
+
+function mostrarFim() {
+  const ranking = rankear();
+  const m = $('#modal');
+  const linhas = ranking.map((r, k) => {
+    const p = r.j;
+    return `<tr class="${k === 0 ? 'venc' : ''}"><td class="pos">${k + 1}º</td><td>${chipHTML(p.idx)}</td><td>${p.pos}</td>
+      <td>${p.acertos[1]}</td><td>${p.acertos[2]}</td><td>${p.acertos[3]}</td><td><b>${p.acertos[1] + p.acertos[2] + p.acertos[3]}</b>/${p.respondidas}</td>
+      ${EIXOS.map(e => `<td>${p.porEixo[e].a}/${p.porEixo[e].t}</td>`).join('')}</tr>`;
+  }).join('');
+  const v = ranking[0].j;
+  m.innerHTML = `<div class="dossie tela" role="dialog" aria-label="Fim de jogo">
+    <h1><small>${state.fim.motivo === 'tempo' ? 'FIM DO TEMPO' : 'ADESÃO CONQUISTADA'}</small>${esc(v.nome)} vence!</h1>
+    <p class="lead">${esc(state.fim.texto)}</p>
+    ${ARAME}
+    <table class="rank"><thead><tr><th>#</th><th>Delegação</th><th>Casa</th><th>Nível 1</th><th>Nível 2</th><th>Nível 3</th><th>Acertos</th>${EIXOS.map(e => `<th>${esc(CONFIG.eixos[e].nome)}</th>`).join('')}</tr></thead><tbody>${linhas}</tbody></table>
+    <div class="nota">Acertos por nível, total (acertos/perguntas) e por eixo (acertos/perguntas). Desempate: acertos no nível 3, acertos no total, sorteio.</div>
+    <div class="acoes" style="margin-top:12px"><button class="btn" id="bDeNovo" style="font-size:1.3rem">${ico('restart', 20)} Jogar de novo</button></div></div>`;
+  m.hidden = false;
+  $('#bDeNovo').onclick = () => { fecharModal(); mostrarInicio(); };
+}
+
+/* =====================================================================
+   REGRAS DO JOGO
+   ===================================================================== */
+function iniciarTurno() {
+  const j = jog();
+  state.turno = { eixo: null, nivel: null, carta: null, gasto: 0, extra: 0, escudo: j.escudo, sem3: j.sem3, correto: null, resp: null,
+                  posInicio: j.pos, eixos: [], eventos: [] };
+  j.escudo = false; j.sem3 = false;
+  state.fase = 'anel'; state.tempoRestante = CONFIG.tempoResposta; ui.animando = false; ui.lock = false;
+  salvar(); renderTudo();
+}
+
+function escolherAnel(cor) {
+  if (state.fase !== 'anel' || ui.lock || state.pausado) return;
+  const eixo = CONFIG.aneis[cor], j = jog(), t = state.turno;
+  if (j.ultimoEixo === eixo) return;               // regra: não repetir eixo
+  t.eixo = eixo; j.ultimoEixo = eixo; t.eixos.push(eixo);
+  if (t.extra === 2) { t.nivel = 1; sortearEIniciarPergunta(); }
+  else { state.fase = 'nivel'; salvar(); renderTudo(); }
+}
+
+function escolherNivel(n) {
+  const t = state.turno;
+  if (state.fase !== 'nivel' || state.pausado || ![1, 2, 3].includes(n)) return;
+  if (n === 3 && t.sem3) return;
+  t.nivel = n; sortearEIniciarPergunta();
+}
+
+function sortearCarta(eixo, nivel) {
+  const chave = eixo + '|' + nivel, grupo = CARTAS.filter(c => c.eixo === eixo && c.nivel === nivel);
+  let usadas = state.usadas[chave] || [];
+  let livres = grupo.filter(c => !usadas.includes(c.n));
+  if (!livres.length) { usadas = []; livres = grupo.slice(); }     // reembaralha só esse grupo
+  const c = livres[rnd(livres.length)];
+  usadas.push(c.n); state.usadas[chave] = usadas;
+  return c;
+}
+
+function sortearEIniciarPergunta() {
+  const t = state.turno, c = sortearCarta(t.eixo, t.nivel);
+  t.carta = c.n; t.correto = null; t.resp = null;
+  state.fase = 'pergunta'; state.tempoRestante = CONFIG.tempoResposta;
+  salvar(); renderTudo();
+}
+
+function responder(i) {
+  if (state.fase !== 'pergunta' || state.pausado) return;
+  const t = state.turno, j = jog(), card = CARTAS.find(c => c.n === t.carta);
+  t.resp = (i == null) ? null : i;
+  t.correto = (i != null && i === card.correta);
+  j.respondidas++; j.porEixo[card.eixo].t++;
+  if (t.correto) { j.acertos[card.nivel]++; j.porEixo[card.eixo].a++; }
+  state.hist.push({ tipo: 'pergunta', jogador: state.atual, rodada: state.rodada, carta: card.n, eixo: card.eixo, nivel: card.nivel, extra: t.extra === 2, correto: t.correto, tempoEsgotado: i == null });
+  state.fase = 'resultado'; salvar(); renderTudo();
+}
+
+/* movimento: devolve passos realmente dados (positivo ou negativo) e registra a animação */
+function mover(idx, delta, anims) {
+  const p = state.jogadores[idx], t = state.turno;
+  let passos;
+  if (delta > 0) {
+    const livre = Math.max(0, CONFIG.maxAvancoPorTurno - t.gasto);
+    passos = Math.min(delta, livre, CONFIG.casaFinal - p.pos);
+  } else passos = -Math.min(-delta, p.pos);
+  if (!passos) return 0;
+  const de = p.pos; p.pos += passos;
+  if (idx === state.atual && passos > 0) t.gasto += passos;
+  anims.push({ t: 'mov', j: idx, de, para: p.pos });
+  if (p.pos >= CONFIG.casaFinal && state.vencedor == null) state.vencedor = idx;
+  return passos;
+}
+
+function dispararEvento(idx, anims, profundidade) {
+  const p = state.jogadores[idx], t = state.turno, ev = CONFIG.eventos[p.pos];
+  if (!ev || state.vencedor != null) return;
+  const casa = p.pos;
+  let efeito = '';
+  const reg = () => state.hist.push({ tipo: 'evento', jogador: idx, casa, evento: ev.tipo, rodada: state.rodada });
+  reg(); t.eventos.push(casa);
+  switch (ev.tipo) {
+    case 'avancar': {
+      const bloc = [];
+      anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto, idx });
+      const n = mover(idx, ev.valor, bloc); anims.push(...bloc);
+      if (!n) anims.push({ t: 'msg', texto: 'Limite de ' + CONFIG.maxAvancoPorTurno + ' casas por turno: sem avanço.' });
+      if (n && CONFIG.eventosEncadeados && profundidade < 3) dispararEvento(idx, anims, profundidade + 1);
+      break; }
+    case 'recuar':
+      anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto, idx });
+      mover(idx, -ev.valor, anims);
+      break;
+    case 'alianca':
+      anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto, idx });
+      p.escudo = true;
+      break;
+    case 'todosRecuam':
+      anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto, idx });
+      state.jogadores.forEach((q, k) => mover(k, -ev.valor, anims));
+      break;
+    case 'perguntaExtra':
+      if (t.gasto < CONFIG.maxAvancoPorTurno) { t.extra = 1; anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto, idx }); }
+      else anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto + ' (Limite de ' + CONFIG.maxAvancoPorTurno + ' casas por turno já atingido: pergunta extra cancelada.)', idx });
+      break;
+    case 'dissuasao':
+      anims.push({ t: 'evento', casa, nome: ev.nome, texto: ev.texto, idx });
+      state.jogadores[proximoIdx(idx)].sem3 = true;
+      break;
+  }
+}
+
+/* aplica o resultado da pergunta ao estado e devolve a lista de animações */
+function aplicarResultado() {
+  const t = state.turno, idx = state.atual, p = jog(), anims = [], card = CARTAS.find(c => c.n === t.carta);
+  const extra = t.extra === 2;
+  state.msg = '';
+  if (t.correto) {
+    const n = mover(idx, extra ? 1 : card.nivel, anims);
+    if (n > 0 && state.vencedor == null && !extra) dispararEvento(idx, anims, 0);
+    if (!n) state.msg = 'Limite de ' + CONFIG.maxAvancoPorTurno + ' casas por turno.';
+  } else if (card.nivel === 3 && !extra) {
+    if (t.escudo) { state.msg = 'Aliança: não volta.'; anims.push({ t: 'msg', texto: 'Aliança: o peão não volta.' }); }
+    else {
+      mover(idx, -CONFIG.voltaAoErrarNivel3, anims);
+      if (CONFIG.eventosAoRecuar) dispararEvento(idx, anims, 0);
+    }
+  }
+  if (extra) t.extra = 3;
+  return anims;
+}
+
+async function continuar() {
+  if (state.fase !== 'resultado' || ui.lock) return;
+  ui.lock = true;
+  const anims = aplicarResultado();
+  state.fase = 'animando'; ui.animando = true;
+  salvar(); fecharModal(); renderTudo();
+  await tocarAnimacoes(anims);
+  ui.animando = false;
+  await posAnimacao();
+}
+
+async function tocarAnimacoes(anims) {
+  for (const a of anims) {
+    if (a.t === 'mov') await animarMov(a);
+    else if (a.t === 'evento') await mostrarEvento(a);
+    else if (a.t === 'msg') { state.msg = a.texto; renderCentro(); await sleep(CONFIG.animacaoMsPorCasa * 2); }
+  }
+  ui.vis = state.jogadores.map(p => p.pos); posicionarPeoes();
+}
+
+async function animarMov(a) {
+  const passo = a.para > a.de ? 1 : -1, el = $('#peao' + a.j);
+  for (let c = a.de + passo; c !== a.para + passo; c += passo) {
+    ui.vis[a.j] = c; posicionarPeoes();
+    el.classList.remove('hop'); void el.offsetWidth; el.classList.add('hop');
+    await sleep(CONFIG.animacaoMsPorCasa);
+  }
+}
+
+function mostrarEvento(a) {
+  return new Promise(res => {
+    const b = $('#banner');
+    b.innerHTML = `<div class="dossie evento" role="dialog" aria-label="Evento">
+      <span class="carimbo">Evento · Casa ${a.casa}</span>
+      <h2>${esc(a.nome)}</h2>
+      <p>${esc(a.texto)}</p>
+      <p class="ef">${chipHTML(a.idx)}</p>
+      ${ARAME}
+      <button class="btn" id="bEv">Continuar ${ico('play', 18)}</button></div>`;
+    b.hidden = false;
+    const fim = () => { b.hidden = true; b.innerHTML = ''; ui.bannerRes = null; res(); };
+    ui.bannerRes = fim;
+    $('#bEv').addEventListener('click', fim);
+    setTimeout(() => { const x = $('#bEv'); if (x) x.focus({ preventScroll: true }); }, 0);
+  });
+}
+
+async function posAnimacao() {
+  if (state.vencedor != null) return finalizar('casa30');
+  const t = state.turno;
+  if (t && t.extra === 1) {
+    t.extra = 2; t.nivel = 1; t.carta = null; t.correto = null; t.resp = null;
+    state.fase = 'anel'; ui.lock = false; salvar(); renderTudo(); return;
+  }
+  fimDoTurno();
+}
+
+function fimDoTurno() {
+  const t = state.turno, p = jog();
+  state.turnos.push({ jogador: state.atual, rodada: state.rodada, posInicio: t.posInicio, posFim: p.pos, gasto: t.gasto, eixos: t.eixos.slice(), eventos: t.eventos.slice(), extra: t.extra });
+  const prox = proximoIdx(state.atual);
+  if (state.modo === 'tempo' && state.tempoAcabou && prox === state.inicial) return finalizar('tempo');
+  if (prox === state.inicial) state.rodada++;
+  state.atual = prox; state.msg = '';
+  iniciarTurno();
+}
+
+function rankear() {
+  return state.jogadores.map(j => ({ j })).sort((a, b) => {
+    const x = a.j, y = b.j;
+    return (y.pos - x.pos) || (y.acertos[3] - x.acertos[3]) ||
+      ((y.acertos[1] + y.acertos[2] + y.acertos[3]) - (x.acertos[1] + x.acertos[2] + x.acertos[3])) || (y.sorteio - x.sorteio);
+  });
+}
+
+function finalizar(motivo) {
+  state.jogadores.forEach(j => j.sorteio = Math.random());
+  const r = rankear(), a = r[0].j, b = r[1].j;
+  let texto;
+  if (motivo === 'casa30') texto = `${a.nome} chegou à casa ${CONFIG.casaFinal} (Adesão).`;
+  else if (a.pos !== b.pos) texto = `O tempo acabou e a rodada foi concluída: ${a.nome} está mais à frente (casa ${a.pos}).`;
+  else if (a.acertos[3] !== b.acertos[3]) texto = `Empate na casa ${a.pos}: ${a.nome} desempata por mais acertos no nível 3.`;
+  else if ((a.acertos[1]+a.acertos[2]+a.acertos[3]) !== (b.acertos[1]+b.acertos[2]+b.acertos[3])) texto = `Empate na casa ${a.pos}: ${a.nome} desempata por mais acertos no total.`;
+  else texto = `Empate total na casa ${a.pos}: ${a.nome} vence por sorteio.`;
+  state.fim = { motivo, texto }; state.fase = 'fim'; state.pausado = false;
+  apagarSave(); ui.animando = false; ui.lock = false;
+  renderTudo(); mostrarFim();
+}
+
+/* =====================================================================
+   PAUSA, RELÓGIOS, TECLADO
+   ===================================================================== */
+function alternarPausa() {
+  if (!state || state.fim || !$('#inicio').hidden) return;
+  state.pausado = !state.pausado; salvar(); renderPausa();
+}
+$('#btnRetomar').onclick = () => alternarPausa();
+
+let ultimoTick = performance.now(), ultimoSave = 0;
+setInterval(() => {
+  const agora = performance.now(), dt = Math.min(agora - ultimoTick, 1500); ultimoTick = agora;
+  if (!state || state.pausado || state.fim || !$('#inicio').hidden) return;
+  if (state.fase === 'pergunta') {
+    state.tempoRestante -= dt / 1000; atualizarTimer();
+    if (state.tempoRestante <= 0) { state.tempoRestante = 0; responder(null); return; }
+  }
+  if (state.modo === 'tempo' && !state.tempoAcabou) {
+    state.tempoJogo -= dt;
+    if (state.tempoJogo <= 0) { state.tempoJogo = 0; state.tempoAcabou = true; salvar(); renderLateral(); }
+    else { const r = $('#relogioTxt'); if (r) r.textContent = fmtTempo(state.tempoJogo); }
+  }
+  if (agora - ultimoSave > 2000) { ultimoSave = agora; salvar(); }
+}, 200);
+
+function alternarCalibracao() {
+  ui.calib = !ui.calib; document.body.classList.toggle('calib', ui.calib);
+}
+$('#board').addEventListener('mousemove', (e) => {
+  if (!ui.calib) return;
+  const r = $('#board').getBoundingClientRect();
+  const x = Math.round((e.clientX - r.left) / r.width * TAB.largura), y = Math.round((e.clientY - r.top) / r.height * TAB.altura);
+  $('#calibInfo').textContent = `Calibração (D) · x=${x} y=${y} (px da imagem) · ${(x / TAB.largura * 100).toFixed(2)}% , ${(y / TAB.altura * 100).toFixed(2)}%`;
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (!$('#inicio').hidden) { return; }
+  if (ui.bannerRes) { if (k === 'enter' || k === ' ') { e.preventDefault(); ui.bannerRes(); } return; }
+  if (!$('#banner').hidden) { if (k === 'escape') $('#bFecharRegras') && $('#bFecharRegras').click(); return; }
+  if (!state) return;
+  // calibração: D fora da pergunta, ou Shift+D sempre
+  if (k === 'd' && (e.shiftKey || state.fase !== 'pergunta')) { alternarCalibracao(); return; }
+  if (state.fim) return;
+  if (k === 'p') { alternarPausa(); return; }
+  if (state.pausado) { if (k === 'enter' || k === ' ') { e.preventDefault(); alternarPausa(); } return; }
+  if (state.fase === 'nivel' && ['1', '2', '3'].includes(k)) escolherNivel(+k);
+  else if (state.fase === 'pergunta' && 'abcd'.includes(k) && k.length === 1) responder('abcd'.indexOf(k));
+  else if (state.fase === 'resultado' && (k === 'enter' || k === ' ')) { e.preventDefault(); continuar(); }
+});
+
+/* =====================================================================
+   INÍCIO
+   ===================================================================== */
+if (/[?&]rapido/.test(location.search)) { document.body.classList.add('rapido'); CONFIG.animacaoMsPorCasa = 0; }
+montarTabuleiro();
+state = novoEstado('normal'); state.pausado = true;   // fundo do menu
+state.turno = null;
+renderTabuleiro(); renderLateral();
+mostrarInicio();
+window.MASTER = { CONFIG, CARTAS, get state() { return state; }, iniciarJogo, escolherAnel, escolherNivel, responder, continuar, alternarCalibracao };
+</script>
+</body>
+</html>
